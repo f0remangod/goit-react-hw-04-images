@@ -1,49 +1,49 @@
-import { Component } from 'react';
 import { ModalStyled, Overlay } from './Modal.styled';
 import PropTypes from 'prop-types';
+import { useEffect, useCallback } from 'react';
 
-export class Modal extends Component {
-  static propTypes = {
-    image: PropTypes.shape({
-      link: PropTypes.string.isRequired,
-      alt: PropTypes.string.isRequired,
-    }),
-    onClose: PropTypes.func.isRequired,
-    onLoad: PropTypes.func.isRequired,
-  };
+export const Modal = ({ image, onClose, onLoad }) => {
+  const { link, alt } = image;
 
-  componentDidMount() {
-    window.addEventListener('keydown', this.handleEscape);
-  }
+  const handleEscape = useCallback(
+    event => {
+      console.log('callback');
+      if (event.code === 'Escape') {
+        onClose();
+      }
+    },
+    [onClose]
+  );
 
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.handleEscape);
-  }
+  useEffect(() => {
+    window.addEventListener('keydown', handleEscape);
+    return () => {
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, [handleEscape]);
 
-  handleEscape = event => {
-    if (event.code === 'Escape') {
-      this.props.onClose();
-    }
-  };
-
-  handleBackdropClick = event => {
+  const handleBackdropClick = event => {
     const { target, currentTarget } = event;
 
     if (target.value === currentTarget.value) {
-      this.props.onClose();
+      onClose();
     }
   };
 
-  render() {
-    const { link, alt } = this.props.image;
-    const { onLoad } = this.props;
+  return (
+    <Overlay onClick={handleBackdropClick}>
+      <ModalStyled>
+        <img src={link} alt={alt} onLoad={() => onLoad()} />
+      </ModalStyled>
+    </Overlay>
+  );
+};
 
-    return (
-      <Overlay onClick={this.handleBackdropClick}>
-        <ModalStyled>
-          <img src={link} alt={alt} onLoad={() => onLoad()} />
-        </ModalStyled>
-      </Overlay>
-    );
-  }
-}
+Modal.propTypes = {
+  image: PropTypes.shape({
+    link: PropTypes.string.isRequired,
+    alt: PropTypes.string.isRequired,
+  }),
+  onClose: PropTypes.func.isRequired,
+  onLoad: PropTypes.func.isRequired,
+};
